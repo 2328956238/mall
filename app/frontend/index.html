@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>⚡ 闪电秒杀平台</title>
+    <link rel="stylesheet" href="/static/styles/main.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div id="app">
+        <!-- 导航栏 -->
+        <nav class="navbar">
+            <div class="nav-container">
+                <div class="nav-brand" onclick="showPage('home')">
+                    <span class="brand-icon">⚡</span>
+                    <span class="brand-text">秒杀</span>
+                </div>
+                <div class="nav-links">
+                    <a href="#" onclick="showPage('home')" class="nav-link" data-page="home">首页</a>
+                    <a href="#" onclick="showPage('products')" class="nav-link" data-page="products">商品</a>
+                    <a href="#" onclick="showPage('seckill')" class="nav-link" data-page="seckill">秒杀</a>
+                    <a href="#" onclick="showPage('orders')" class="nav-link" data-page="orders">订单</a>
+                    <a href="#" onclick="showPage('admin')" class="nav-link admin-link" data-page="admin" style="display:none">管理后台</a>
+                </div>
+                <div class="nav-right">
+                    <span id="userInfo" class="user-info" style="display:none">
+                        <span id="userNameDisplay" class="user-name"></span>
+                        <button class="btn btn-sm btn-outline" onclick="logout()">退出</button>
+                    </span>
+                    <span id="guestInfo">
+                        <button class="btn btn-sm btn-primary" onclick="showPage('login')">登录</button>
+                        <button class="btn btn-sm btn-outline" onclick="showPage('register')">注册</button>
+                    </span>
+                </div>
+            </div>
+        </nav>
+
+        <!-- 主内容区域 -->
+        <main class="main-content">
+            <!-- 首页 -->
+            <section id="page-home" class="page active">
+                <div class="hero">
+                    <h1>⚡ 闪电秒杀平台</h1>
+                    <p>高性能分布式秒杀系统 · 极速抢购 · 实时通知</p>
+                    <div class="hero-stats">
+                        <div class="stat-card">
+                            <span class="stat-value" id="totalProducts">0</span>
+                            <span class="stat-label">商品总数</span>
+                        </div>
+                        <div class="stat-card">
+                            <span class="stat-value" id="activeSeckill">0</span>
+                            <span class="stat-label">进行中秒杀</span>
+                        </div>
+                        <div class="stat-card">
+                            <span class="stat-value" id="totalOrders">0</span>
+                            <span class="stat-label">总订单数</span>
+                        </div>
+                    </div>
+                    <div class="hero-actions">
+                        <button class="btn btn-primary btn-lg" onclick="showPage('seckill')">🚀 立即抢购</button>
+                        <button class="btn btn-outline btn-lg" onclick="showPage('products')">📦 浏览商品</button>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <h2>🔥 热门秒杀</h2>
+                    <div id="homeSeckillList" class="product-grid">
+                        <div class="loading">加载中...</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 登录页 -->
+            <section id="page-login" class="page">
+                <div class="form-container">
+                    <h2>🔐 登录</h2>
+                    <form id="loginForm" onsubmit="handleLogin(event)">
+                        <div class="form-group">
+                            <label for="loginEmail">邮箱</label>
+                            <input type="email" id="loginEmail" class="form-control" placeholder="请输入邮箱" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="loginPassword">密码</label>
+                            <input type="password" id="loginPassword" class="form-control" placeholder="请输入密码" required>
+                        </div>
+                        <div id="loginError" class="form-error" style="display:none"></div>
+                        <button type="submit" class="btn btn-primary btn-block">登录</button>
+                    </form>
+                    <p class="form-footer">还没有账号？<a href="#" onclick="showPage('register')">立即注册</a></p>
+                </div>
+            </section>
+
+            <!-- 注册页 -->
+            <section id="page-register" class="page">
+                <div class="form-container">
+                    <h2>📝 注册</h2>
+                    <form id="registerForm" onsubmit="handleRegister(event)">
+                        <div class="form-group">
+                            <label for="regEmail">邮箱</label>
+                            <input type="email" id="regEmail" class="form-control" placeholder="请输入邮箱" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="regName">用户名</label>
+                            <input type="text" id="regName" class="form-control" placeholder="请输入用户名" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="regPassword">密码</label>
+                            <input type="password" id="regPassword" class="form-control" placeholder="至少8位，包含字母和数字" required>
+                        </div>
+                        <div id="registerError" class="form-error" style="display:none"></div>
+                        <button type="submit" class="btn btn-primary btn-block">注册</button>
+                    </form>
+                    <p class="form-footer">已有账号？<a href="#" onclick="showPage('login')">去登录</a></p>
+                </div>
+            </section>
+
+            <!-- 商品列表页 -->
+            <section id="page-products" class="page">
+                <div class="page-header">
+                    <h2>📦 全部商品</h2>
+                </div>
+                <div id="productList" class="product-grid">
+                    <div class="loading">加载中...</div>
+                </div>
+            </section>
+
+            <!-- 秒杀页 -->
+            <section id="page-seckill" class="page">
+                <div class="page-header">
+                    <h2>⚡ 秒杀活动</h2>
+                    <span class="badge badge-warning" id="seckillCount">加载中...</span>
+                </div>
+                <div class="seckill-filters">
+                    <button class="seckill-filter active" data-filter="all" onclick="filterSeckill('all')">全部</button>
+                    <button class="seckill-filter" data-filter="active" onclick="filterSeckill('active')">进行中</button>
+                    <button class="seckill-filter" data-filter="upcoming" onclick="filterSeckill('upcoming')">即将开始</button>
+                    <button class="seckill-filter" data-filter="ended" onclick="filterSeckill('ended')">已结束</button>
+                </div>
+                <div id="seckillList" class="product-grid">
+                    <div class="loading">加载中...</div>
+                </div>
+            </section>
+
+            <!-- 订单页 -->
+            <section id="page-orders" class="page">
+                <div class="page-header">
+                    <h2>📋 我的订单</h2>
+                </div>
+                <div id="orderList" class="order-list">
+                    <div class="loading">加载中...</div>
+                </div>
+            </section>
+
+            <!-- 管理后台 -->
+            <section id="page-admin" class="page">
+                <div class="page-header">
+                    <h2>🛠️ 管理后台</h2>
+                </div>
+                <div class="admin-tabs">
+                    <button class="admin-tab active" data-tab="admin-products" onclick="switchAdminTab('admin-products')">商品管理</button>
+                    <button class="admin-tab" data-tab="admin-seckill" onclick="switchAdminTab('admin-seckill')">秒杀管理</button>
+                    <button class="admin-tab" data-tab="admin-orders" onclick="switchAdminTab('admin-orders')">订单管理</button>
+                </div>
+
+                <!-- 商品管理 -->
+                <div id="tab-admin-products" class="admin-tab-content active">
+                    <div class="admin-toolbar">
+                        <button class="btn btn-primary" onclick="showAdminProductModal()">+ 新增商品</button>
+                    </div>
+                    <div id="adminProductList" class="admin-table-wrapper">
+                        <div class="loading">加载中...</div>
+                    </div>
+                </div>
+
+                <!-- 秒杀管理 -->
+                <div id="tab-admin-seckill" class="admin-tab-content">
+                    <div class="admin-toolbar">
+                        <button class="btn btn-primary" onclick="showAdminSeckillModal()">+ 新增秒杀</button>
+                    </div>
+                    <div id="adminSeckillList" class="admin-table-wrapper">
+                        <div class="loading">加载中...</div>
+                    </div>
+                </div>
+
+                <!-- 订单管理 -->
+                <div id="tab-admin-orders" class="admin-tab-content">
+                    <div class="admin-toolbar">
+                        <div class="order-stat-cards" id="orderStats">
+                            <div class="loading">加载中...</div>
+                        </div>
+                    </div>
+                    <div id="adminOrderList" class="admin-table-wrapper">
+                        <div class="loading">加载中...</div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Toast 通知 -->
+        <div id="toastContainer" class="toast-container"></div>
+
+        <!-- Modal -->
+        <div id="modalOverlay" class="modal-overlay" style="display:none">
+            <div class="modal">
+                <div class="modal-header">
+                    <h3 id="modalTitle"></h3>
+                    <button class="modal-close" onclick="closeModal()">&times;</button>
+                </div>
+                <div class="modal-body" id="modalBody"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/scripts/main.js"></script>
+</body>
+</html>
