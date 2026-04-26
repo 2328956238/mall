@@ -168,4 +168,4 @@ cd app && uvicorn main:app --host 0.0.0.0 --port 8000 --reload
 
 ---
 
-*更多技术细节请参考 [技术文档](docs/TECHNICAL_DOCUMENTATION.md)。*
+*更多技术细节请参考 [技术文档](docs/TECHNICAL_DOCUMENTATION.md)。*# mall
