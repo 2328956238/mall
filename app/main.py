@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
 from app.db.session import engine
 from app.models.base import Base
-from app.api.v1 import auth, users, products, seckill, orders, payment, prompt
+from app.api.v1 import auth, users, products, seckill, orders, payment, prompt, chat, agent
 from app.admin import products_admin, seckill_admin, orders_admin
 from app.middleware.log_middleware import LogMiddleware
 from app.middleware.prometheus import setup_metrics
@@ -74,6 +74,8 @@ app.include_router(seckill.router, prefix="/api/v1", tags=["seckill"])
 app.include_router(orders.router, prefix="/api/v1", tags=["orders"])
 app.include_router(payment.router, prefix="/api/v1", tags=["payment"])
 app.include_router(prompt.router, prefix="/api/v1", tags=["prompt"])
+app.include_router(chat.router, prefix="/api/v1", tags=["chat"])
+app.include_router(agent.router, prefix="/api/v1", tags=["agent"])
 
 # 管理端路由
 app.include_router(products_admin.router, prefix="/admin/api", tags=["admin"])

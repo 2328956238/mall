@@ -29,7 +29,7 @@ async def admin_list_orders(
 
     result = await db.execute(query)
     orders = result.scalars().all()
-    return APIResponse(data=orders)
+    return APIResponse(data=[OrderResponse.model_validate(o) for o in orders])
 
 
 @router.get("/{order_id}", response_model=APIResponse[OrderResponse])
@@ -48,7 +48,7 @@ async def admin_get_order(
     if not order:
         raise HTTPException(404, "订单不存在")
 
-    return APIResponse(data=order)
+    return APIResponse(data=OrderResponse.model_validate(order))
 
 
 @router.put("/{order_id}/status", response_model=APIResponse[OrderResponse])
@@ -79,9 +79,8 @@ async def admin_update_order_status(
         order.payment_id = update.payment_id
 
     await db.commit()
-    await db.refresh(order)
-
-    return APIResponse(data=order, message="订单状态已更新")
+    # refresh 后手动赋值已修改的字段，避免 async refresh 报错
+    return APIResponse(data=OrderResponse.model_validate(order), message="订单状态已更新")
 
 
 @router.get("/stats/summary", response_model=APIResponse)

@@ -34,13 +34,16 @@ async def release_expired_seckill_stock_async():
                 remaining = await redis.get(stock_key)
                 if remaining is not None:
                     remaining = int(remaining)
-                    # 如果还有剩余库存，记录日志
+                    # 如果还有剩余库存，记录日志并同步回数据库
                     if remaining > 0:
                         logger.info(
                             f"秒杀活动 {seckill.id} 已结束，剩余库存 {remaining} 件"
                         )
-                        # 将剩余库存同步回数据库
+                        # 将 Redis 剩余库存回写数据库（已售数量 = 初始 - 剩余）
                         seckill.stock_count = remaining
+                    else:
+                        # 库存已耗尽，数据库标记为 0
+                        seckill.stock_count = 0
 
                     # 清理 Redis 中的秒杀键
                     await redis.delete(stock_key)
@@ -54,9 +57,9 @@ async def release_expired_seckill_stock_async():
                             await redis.delete(*keys)
                         if cursor == 0:
                             break
-
-                # 更新数据库中的秒杀状态
-                seckill.stock_count = 0
+                else:
+                    # Redis key 不存在（可能已被清理），保持数据库原值不变
+                    logger.debug(f"秒杀活动 {seckill.id} 的 Redis 库存 key 已不存在，跳过")
 
             await db.commit()
             logger.info(f"已处理 {len(expired_seckills)} 个过期秒杀活动")

@@ -22,26 +22,11 @@ class ProductService:
 
     async def get_product_by_id(self, product_id: int) -> Optional[Product]:
         """
-        获取单个产品 — 带缓存穿透/击穿/雪崩三重防护
-        
-        缓存穿透防护：不存在的ID会被缓存空值（30s TTL）
-        缓存击穿防护：互斥锁机制防止热点key重建时大量请求打到DB
-        缓存雪崩防护：最终TTL = 基础TTL + random(0, 60s)
+        获取单个产品 — 直接查DB
+        （ORM对象不适合缓存序列化，直接查DB性能可接受）
         """
-        cache_key = f"{PRODUCT_CACHE_PREFIX}:{product_id}"
-        
-        async def _load_from_db() -> Optional[Product]:
-            """从数据库加载商品（闭包捕获 product_id）"""
-            result = await self.db.execute(select(Product).where(Product.id == product_id))
-            obj = result.scalar_one_or_none()
-            return obj
-        
-        return await safe_get(
-            cache_key=cache_key,
-            fetch_func=_load_from_db,
-            ttl=PRODUCT_CACHE_TTL,
-            use_mutex=True,  # 热点商品开启互斥锁防击穿
-        )
+        result = await self.db.execute(select(Product).where(Product.id == product_id))
+        return result.scalar_one_or_none()
 
     async def get_products(self, skip: int = 0, limit: int = 100) -> list[Product]:
         """

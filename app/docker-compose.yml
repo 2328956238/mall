@@ -76,8 +76,8 @@ services:
 
   api:
     build:
-      context: .
-      dockerfile: Dockerfile
+      context: ..
+      dockerfile: app/Dockerfile
     container_name: flash_sales_api
     restart: unless-stopped
     ports:
@@ -92,10 +92,12 @@ services:
     env_file:
       - ../.env
     volumes:
-      - ./:/app
-    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+      - ..:/app
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
     environment:
       PYTHONPATH: /app
+      DATABASE_URL: postgresql+asyncpg://postgres:postgres@db:5432/flash_sales
+      REDIS_URL: redis://redis:6379/0
 
 volumes:
   postgres_data:

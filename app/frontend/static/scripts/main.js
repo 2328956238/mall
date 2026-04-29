@@ -927,3 +927,192 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
     showPage('home');
 });
+// ============================================================
+// 💬 智能客服 - Chat Widget
+// ============================================================
+let chatHistory = []; // 当前对话历史
+let isChatLoading = false;
+
+/** 切换客服面板显示/隐藏 */
+function toggleChat() {
+    const panel = document.getElementById('chatPanel');
+    const widget = document.getElementById('chatWidget');
+    const isOpen = panel.style.display !== 'none';
+    panel.style.display = isOpen ? 'none' : 'flex';
+    widget.classList.toggle('active', !isOpen);
+    if (!isOpen) {
+        scrollChatToBottom();
+        document.getElementById('chatInput').focus();
+    }
+}
+
+/** 发送快捷消息 */
+function sendQuickMessage(msg) {
+    document.getElementById('chatInput').value = msg;
+    sendMessage();
+}
+
+/** 发送消息 */
+async function sendMessage() {
+    const input = document.getElementById('chatInput');
+    const message = input.value.trim();
+    if (!message || isChatLoading) return;
+
+    // 检查是否已登录
+    if (!state.token) {
+        showToast('请先登录后使用智能客服', 'warning');
+        showPage('login');
+        return;
+    }
+
+    input.value = '';
+    addMessage('user', message);
+    isChatLoading = true;
+    updateSendButton(true);
+    showTypingIndicator();
+
+    try {
+        const data = await apiRequest(`${API_BASE}/chat/message`, {
+            method: 'POST',
+            body: JSON.stringify({
+                message: message,
+                history: chatHistory.slice(-10), // 保留最近10条上下文
+            }),
+        });
+
+        removeTypingIndicator();
+        if (data && data.data) {
+            const reply = data.data.reply;
+            addMessage('assistant', reply);
+        } else {
+            addMessage('assistant', '抱歉，暂时无法回复，请稍后再试。🙏');
+        }
+    } catch (err) {
+        removeTypingIndicator();
+        if (err.message.includes('401') || err.message.includes('登录')) {
+            showToast('登录已过期，请重新登录', 'error');
+            showPage('login');
+        } else {
+            addMessage('assistant', `😅 抱歉，我遇到了一些问题: ${err.message}。请稍后再试！`);
+        }
+    } finally {
+        isChatLoading = false;
+        updateSendButton(false);
+    }
+}
+
+/** 添加消息到对话区域 */
+function addMessage(role, content) {
+    const container = document.getElementById('chatMessages');
+    const div = document.createElement('div');
+    div.className = `chat-message chat-message-${role}`;
+    
+    const now = new Date();
+    const timeStr = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
+    
+    if (role === 'user') {
+        div.innerHTML = `
+            <div class="chat-bubble chat-bubble-user">
+                <div class="chat-bubble-content">${escapeHtml(content).replace(/\n/g, '<br>')}</div>
+                <div class="chat-timestamp">${timeStr}</div>
+            </div>
+        `;
+        chatHistory.push({ role: 'user', content: content });
+    } else {
+        div.innerHTML = `
+            <div class="chat-bubble chat-bubble-assistant">
+                <div class="chat-bubble-content">${formatAssistantReply(content)}</div>
+                <div class="chat-timestamp">${timeStr}</div>
+            </div>
+        `;
+        chatHistory.push({ role: 'assistant', content: content });
+    }
+    
+    container.appendChild(div);
+    scrollChatToBottom();
+    
+    // 如果消息太多，隐藏快捷回复
+    if (chatHistory.length > 2) {
+        document.getElementById('chatQuickReplies').style.display = 'none';
+    }
+}
+
+/** 显示"正在输入..."指示器 */
+function showTypingIndicator() {
+    const container = document.getElementById('chatMessages');
+    const indicator = document.createElement('div');
+    indicator.className = 'chat-message chat-message-assistant';
+    indicator.id = 'typingIndicator';
+    indicator.innerHTML = `
+        <div class="chat-bubble chat-bubble-assistant">
+            <div class="chat-typing">
+                <span class="typing-dot"></span>
+                <span class="typing-dot"></span>
+                <span class="typing-dot"></span>
+            </div>
+        </div>
+    `;
+    container.appendChild(indicator);
+    scrollChatToBottom();
+}
+
+/** 移除"正在输入..."指示器 */
+function removeTypingIndicator() {
+    const indicator = document.getElementById('typingIndicator');
+    if (indicator) indicator.remove();
+}
+
+/** 格式化AI回复（支持简单的Markdown） */
+function formatAssistantReply(text) {
+    if (!text) return '';
+    // 转义HTML
+    let html = escapeHtml(text);
+    // 支持换行
+    html = html.replace(/\n/g, '<br>');
+    // 支持粗体 **text**
+    html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    // 支持列表项
+    html = html.replace(/^\s*[-*]\s+(.*?)(?:<br>|$)/gm, '• $1');
+    // 支持编号列表
+    html = html.replace(/^\s*(\d+)\.\s+(.*?)(?:<br>|$)/gm, '$1. $2');
+    return html;
+}
+
+/** 更新发送按钮状态 */
+function updateSendButton(loading) {
+    const btn = document.getElementById('chatSendBtn');
+    if (loading) {
+        btn.disabled = true;
+        btn.textContent = '⏳';
+    } else {
+        btn.disabled = false;
+        btn.textContent = '发送';
+    }
+}
+
+/** 滚动对话到底部 */
+function scrollChatToBottom() {
+    const container = document.getElementById('chatMessages');
+    setTimeout(() => {
+        container.scrollTop = container.scrollHeight;
+    }, 50);
+}
+
+/** 清空对话历史 */
+function clearChatHistory() {
+    if (chatHistory.length === 0) return;
+    if (!confirm('确定要清空当前对话记录吗？')) return;
+    chatHistory = [];
+    const container = document.getElementById('chatMessages');
+    container.innerHTML = `
+        <div class="chat-message chat-message-assistant">
+            <div class="chat-bubble chat-bubble-assistant">
+                <div class="chat-bubble-content">
+                    <p>👋 对话已清空！有什么新问题需要帮助吗？</p>
+                </div>
+                <div class="chat-timestamp">${new Date().getHours().toString().padStart(2, '0')}:${new Date().getMinutes().toString().padStart(2, '0')}</div>
+            </div>
+        </div>
+    `;
+    document.getElementById('chatQuickReplies').style.display = 'flex';
+}

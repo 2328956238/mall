@@ -199,6 +199,59 @@
         </main>
 
         <!-- Toast 通知 -->
+        <!-- 智能客服浮窗 -->
+        <div id="chatWidget" class="chat-widget" onclick="toggleChat()">
+            <div class="chat-widget-icon">💬</div>
+        </div>
+
+        <!-- 客服对话面板 -->
+        <div id="chatPanel" class="chat-panel" style="display:none">
+            <div class="chat-header">
+                <div class="chat-header-info">
+                    <span class="chat-avatar">🤖</span>
+                    <div>
+                        <div class="chat-header-title">智能客服 · 小闪</div>
+                        <div class="chat-header-status">在线</div>
+                    </div>
+                </div>
+                <div class="chat-header-actions">
+                    <button class="chat-btn-icon" onclick="clearChatHistory()" title="清空对话">🗑️</button>
+                    <button class="chat-btn-icon" onclick="toggleChat()" title="关闭">✕</button>
+                </div>
+            </div>
+            <div class="chat-messages" id="chatMessages">
+                <div class="chat-message chat-message-assistant">
+                    <div class="chat-bubble chat-bubble-assistant">
+                        <div class="chat-bubble-content">
+                            <p>👋 您好！我是小闪，闪电秒杀平台的智能客服。</p>
+                            <p>我可以帮您：</p>
+                            <ul style="margin:4px 0;padding-left:20px">
+                                <li>查询商品和秒杀信息</li>
+                                <li>解答订单和支付问题</li>
+                                <li>提供平台使用帮助</li>
+                            </ul>
+                            <p>请问有什么可以帮您的吗？😊</p>
+                        </div>
+                        <div class="chat-timestamp">现在</div>
+                    </div>
+                </div>
+            </div>
+            <div class="chat-input-area">
+                <div class="chat-quick-replies" id="chatQuickReplies">
+                    <button class="chat-quick-btn" onclick="sendQuickMessage('最近有什么秒杀活动？')">⚡ 秒杀活动</button>
+                    <button class="chat-quick-btn" onclick="sendQuickMessage('如何查看我的订单？')">📋 我的订单</button>
+                    <button class="chat-quick-btn" onclick="sendQuickMessage('支付支持哪些方式？')">💳 支付方式</button>
+                </div>
+                <div class="chat-input-row">
+                    <input type="text" id="chatInput" class="chat-input" placeholder="输入您的问题..." 
+                           onkeydown="if(event.key==='Enter') sendMessage()">
+                    <button class="chat-send-btn" onclick="sendMessage()" id="chatSendBtn">发送</button>
+                </div>
+                <div class="chat-footer">
+                    <span>需要人工服务？请联系管理员</span>
+                </div>
+            </div>
+        </div>
         <div id="toastContainer" class="toast-container"></div>
 
         <!-- Modal -->

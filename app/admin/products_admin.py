@@ -21,7 +21,7 @@ async def admin_list_products(
     """管理员：获取商品列表"""
     service = ProductService(db)
     products = await service.get_products(skip, limit)
-    return APIResponse(data=products)
+    return APIResponse(data=[ProductResponse.model_validate(p) for p in products])
 
 
 @router.post("/", response_model=APIResponse[ProductResponse])
@@ -33,7 +33,7 @@ async def admin_create_product(
     """管理员：创建商品"""
     service = ProductService(db)
     product = await service.create_product(product_in)
-    return APIResponse(data=product, message="商品创建成功")
+    return APIResponse(data=ProductResponse.model_validate(product), message="商品创建成功")
 
 
 @router.put("/{product_id}", response_model=APIResponse[ProductResponse])
@@ -48,7 +48,7 @@ async def admin_update_product(
     product = await service.update_product(product_id, product_in)
     if not product:
         raise HTTPException(404, "商品不存在")
-    return APIResponse(data=product, message="商品更新成功")
+    return APIResponse(data=ProductResponse.model_validate(product), message="商品更新成功")
 
 
 @router.delete("/{product_id}", response_model=APIResponse)

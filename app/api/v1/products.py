@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
+from typing import List
 from app.db.session import get_db
 from app.services.product_service import ProductService
 from app.schemas.product import ProductCreate, ProductUpdate, ProductResponse
@@ -32,7 +33,7 @@ async def get_products(
     """
     service = ProductService(db)
     products = await service.get_products(skip=skip, limit=limit)
-    return products
+    return [ProductResponse.model_validate(p) for p in products]
 
 @router.get("/{product_id}", response_model=ProductResponse)
 async def get_product(
@@ -66,7 +67,7 @@ async def get_product(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Product with ID {product_id} not found"
         )
-    return product
+    return ProductResponse.model_validate(product)
 
 @router.post("/", response_model=ProductResponse, status_code=status.HTTP_201_CREATED)
 async def create_product(
@@ -94,7 +95,7 @@ async def create_product(
     """
     service = ProductService(db)
     new_product = await service.create_product(product)
-    return new_product
+    return ProductResponse.model_validate(new_product)
 
 @router.put("/{product_id}", response_model=ProductResponse)
 async def update_product(
@@ -132,7 +133,7 @@ async def update_product(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Product with ID {product_id} not found"
         )
-    return updated
+    return ProductResponse.model_validate(updated)
 
 @router.delete("/{product_id}")
 async def delete_product(

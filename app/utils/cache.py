@@ -353,23 +353,35 @@ def _default_encode(data: Any) -> str:
     """
     默认序列化函数
     
-    处理空值标记、ORM对象、Pydantic模型等。
+    处理空值标记、ORM对象、Pydantic模型、对象列表等。
+    注意：序列化后的数据从缓存读取时会被还原为 dict/list，
+    如果调用方需要 ORM 对象，应在接收后自行转换。
     """
     if data is None:
         return json.dumps(None)
     
-    if hasattr(data, "model_dump"):
+    # 处理列表/元组 — 逐个元素提取可序列化数据
+    if isinstance(data, (list, tuple)):
+        items = [_object_to_dict(item) for item in data]
+        return json.dumps(items, default=str, ensure_ascii=False)
+    
+    return json.dumps(_object_to_dict(data), default=str, ensure_ascii=False)
+
+
+def _object_to_dict(obj: Any) -> Any:
+    """将对象转为可 JSON 序列化的 dict，过滤 SQLAlchemy 内部属性"""
+    if obj is None:
+        return None
+    if hasattr(obj, "model_dump"):
         # Pydantic v2 模型
-        return json.dumps(data.model_dump(), default=str, ensure_ascii=False)
-    
-    if hasattr(data, "to_dict"):
-        return json.dumps(data.to_dict(), default=str, ensure_ascii=False)
-    
-    # 通用对象：尝试提取 __dict__
-    if hasattr(data, "__dict__"):
-        return json.dumps(data.__dict__, default=str, ensure_ascii=False)
-    
-    return json.dumps(data, default=str, ensure_ascii=False)
+        return obj.model_dump()
+    if hasattr(obj, "to_dict"):
+        return obj.to_dict()
+    if hasattr(obj, "__dict__"):
+        # ORM 对象等 — 过滤 SQLAlchemy 内部属性和私有属性
+        return {k: v for k, v in obj.__dict__.items() 
+                if not k.startswith("_") and k != "_sa_instance_state"}
+    return obj
 
 
 def _default_decode(data_str: str) -> Any:

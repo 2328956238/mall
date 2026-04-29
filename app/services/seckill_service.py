@@ -43,12 +43,9 @@ class SeckillService:
             )
             return result.scalar_one_or_none()
         
-        return await safe_get(
-            cache_key=cache_key,
-            fetch_func=_load_from_db,
-            ttl=SECKILL_CACHE_TTL,
-            use_mutex=True,  # 秒杀活动是强热点，必须开启互斥锁
-        )
+        # 不使用缓存（ORM 对象序列化/反序列化复杂且有类型问题）
+        # 秒杀前校验直接查 DB，性能可接受
+        return await _load_from_db()
 
     async def _invalidate_seckill_cache(self, seckill_product_id: int) -> None:
         """删除指定秒杀活动的缓存"""
@@ -89,6 +86,17 @@ class SeckillService:
 
         # 2. Redis 预减库存（快速拦截已售罄的情况，减轻数据库压力）
         stock_key = f"{settings.SECKILL_STOCK_PREFIX}{seckill_product_id}"
+        
+        # 防护：如果 Redis 库存 key 不存在（如因 Redis 重启/定时任务误删），
+        # 则从数据库加载当前剩余库存并初始化（原子操作防止并发覆盖）
+        existing = await self.redis.get(stock_key)
+        if existing is None:
+            # 使用 SET NX 确保只有一个 worker 初始化
+            init_result = await self.redis.setnx(stock_key, seckill.stock_count)
+            if init_result:
+                logger.info(f"Redis 库存 key {stock_key} 不存在，已从数据库初始化: {seckill.stock_count}")
+            # 如果 SETNX 返回 False，说明另一个并发请求已初始化，继续走 DECR
+        
         new_stock = await self.redis.decr(stock_key)
         if new_stock < 0:
             await self.redis.incr(stock_key)

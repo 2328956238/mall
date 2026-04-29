@@ -36,7 +36,7 @@ async def get_seckill_products(
         use_mutex=False,
         redis=redis,
     )
-    return products or []
+    return [SeckillProductResponse.model_validate(p) for p in (products or [])]
 
 
 @router.post("/{seckill_product_id}", response_model=SeckillResponse)

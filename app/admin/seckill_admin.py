@@ -26,7 +26,7 @@ async def admin_list_seckill(
     """管理员：获取秒杀产品列表"""
     result = await db.execute(select(SeckillProduct).offset(skip).limit(limit))
     seckill_products = result.scalars().all()
-    return APIResponse(data=seckill_products)
+    return APIResponse(data=[SeckillProductResponse.model_validate(p) for p in seckill_products])
 
 
 @router.post("/", response_model=APIResponse[SeckillProductResponse])
@@ -61,7 +61,7 @@ async def admin_create_seckill(
     await safe_delete_pattern(f"{settings.CACHE_PREFIX}seckill:products:*", redis=redis)
     await safe_delete(f"{settings.CACHE_PREFIX}seckill:id:{seckill.id}", redis=redis)
 
-    return APIResponse(data=seckill, message="秒杀产品创建成功")
+    return APIResponse(data=SeckillProductResponse.model_validate(seckill), message="秒杀产品创建成功")
 
 
 @router.put("/{seckill_id}", response_model=APIResponse[SeckillProductResponse])
@@ -93,7 +93,7 @@ async def admin_update_seckill(
     await safe_delete(f"{settings.CACHE_PREFIX}seckill:id:{seckill.id}", redis=redis)
     await safe_delete_pattern(f"{settings.CACHE_PREFIX}seckill:products:*", redis=redis)
 
-    return APIResponse(data=seckill, message="秒杀产品更新成功")
+    return APIResponse(data=SeckillProductResponse.model_validate(seckill), message="秒杀产品更新成功")
 
 
 @router.delete("/{seckill_id}")
