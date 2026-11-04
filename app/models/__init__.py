@@ -19,6 +19,15 @@ from .inventory import (  # noqa: F401
     WarehouseStock,
 )
 from .operation_log import OperationLog  # noqa: F401
+from .rbac import (  # noqa: F401
+    DataScope,
+    Department,
+    Permission,
+    PermissionType,
+    Role,
+    RolePermission,
+    UserRole,
+)
 from .order import Order, OrderStatus  # noqa: F401
 from .product import Product  # noqa: F401
 from .purchase import (  # noqa: F401
@@ -80,4 +89,11 @@ __all__ = [
     "ShipmentStatus",
     "LogisticsTracking",
     "TrackingStatus",
+    "Department",
+    "Role",
+    "Permission",
+    "PermissionType",
+    "DataScope",
+    "UserRole",
+    "RolePermission",
 ]

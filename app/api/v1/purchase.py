@@ -23,6 +23,7 @@ from app.schemas.purchase import (
     SupplierCreate,
     SupplierResponse,
 )
+from app.services.permission_service import require_permission
 from app.services.purchase_service import PurchaseService, ReceiptLine
 
 router = APIRouter(prefix="/purchase", tags=["purchase"])
@@ -31,7 +32,8 @@ router = APIRouter(prefix="/purchase", tags=["purchase"])
 # ---------------------------------------------------------------------------
 # 供应商
 # ---------------------------------------------------------------------------
-@router.post("/suppliers", response_model=APIResponse[SupplierResponse], status_code=201)
+@router.post("/suppliers", response_model=APIResponse[SupplierResponse], status_code=201,
+             dependencies=[Depends(require_permission("purchase.create"))])
 async def create_supplier(
     payload: SupplierCreate,
     db: AsyncSession = Depends(get_db),
@@ -63,7 +65,8 @@ async def list_suppliers(
 # ---------------------------------------------------------------------------
 # 采购单
 # ---------------------------------------------------------------------------
-@router.post("/orders", response_model=APIResponse[PurchaseOrderResponse], status_code=201)
+@router.post("/orders", response_model=APIResponse[PurchaseOrderResponse], status_code=201,
+             dependencies=[Depends(require_permission("purchase.create"))])
 async def create_po(
     payload: PurchaseOrderCreate,
     db: AsyncSession = Depends(get_db),
@@ -129,7 +132,8 @@ async def submit_po(
     return APIResponse(data=PurchaseOrderResponse.model_validate(po), message="submitted")
 
 
-@router.post("/orders/{po_id}/approve", response_model=APIResponse[PurchaseOrderResponse])
+@router.post("/orders/{po_id}/approve", response_model=APIResponse[PurchaseOrderResponse],
+             dependencies=[Depends(require_permission("purchase.approve"))])
 async def approve_po(
     po_id: int,
     db: AsyncSession = Depends(get_db),
@@ -180,7 +184,8 @@ async def create_receipt(
     )
 
 
-@router.post("/receipts/{receipt_id}/confirm", response_model=APIResponse[ReceiptResponse])
+@router.post("/receipts/{receipt_id}/confirm", response_model=APIResponse[ReceiptResponse],
+             dependencies=[Depends(require_permission("purchase.receive"))])
 async def confirm_receipt(
     receipt_id: int,
     payload: ConfirmReceiptRequest | None = None,
