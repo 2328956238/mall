@@ -57,6 +57,7 @@ app.add_middleware(
 )
 
 # 中间件
+# 写操作落审计表（读请求不记，量太大）；实现在 core_audit 里
 app.add_middleware(LogMiddleware)
 
 # 设置 Prometheus 监控指标

@@ -15,6 +15,9 @@ class Settings(BaseSettings):
     CACHE_TTL_SECONDS: int = 300
 
 
+    # 权限开关：迁移期默认关闭，存量用户没有角色也不会被 403
+    ENFORCE_PERMISSIONS: bool = False
+
     # 秒杀配置
     SECKILL_STOCK_PREFIX: str = "seckill:stock:"
     SECKILL_LIMIT_PREFIX: str = "seckill:limit:"

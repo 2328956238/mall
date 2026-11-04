@@ -32,6 +32,7 @@ from app.schemas.sales import (
     TrackingResponse,
     UnifiedOrder,
 )
+from app.services.permission_service import require_permission
 from app.services.sales_service import SalesService, ShipLine
 
 router = APIRouter(prefix="/sales", tags=["sales"])
@@ -72,7 +73,8 @@ async def list_customers(
 # ---------------------------------------------------------------------------
 # 销售订单
 # ---------------------------------------------------------------------------
-@router.post("/orders", response_model=APIResponse[SalesOrderResponse], status_code=201)
+@router.post("/orders", response_model=APIResponse[SalesOrderResponse], status_code=201,
+             dependencies=[Depends(require_permission("sales.create"))])
 async def create_sales_order(
     payload: SalesOrderCreate,
     db: AsyncSession = Depends(get_db),
@@ -96,12 +98,36 @@ async def list_sales_orders(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    rows = (
-        await db.execute(
-            select(SalesOrder).where(SalesOrder.tenant_id == current_user.tenant_id)
-            .order_by(SalesOrder.id.desc())
-        )
-    ).scalars().all()
+    """列表受数据权限约束：`self` 范围只看自己的单。"""
+    from app.config import settings
+    from app.models.rbac import DataScope
+    from app.services.permission_service import PermissionService
+
+    stmt = select(SalesOrder).where(SalesOrder.tenant_id == current_user.tenant_id)
+
+    if settings.ENFORCE_PERMISSIONS:
+        scope = await PermissionService(db).effective_scope(str(current_user.id))
+        if scope == DataScope.SELF:
+            stmt = stmt.where(SalesOrder.user_id == str(current_user.id))
+        elif scope == DataScope.DEPARTMENT:
+            me = (
+                await db.execute(
+                    select(User.department_id).where(User.id == current_user.id)
+                )
+            ).scalar_one_or_none()
+            if me is None:
+                stmt = stmt.where(SalesOrder.user_id == str(current_user.id))
+            else:
+                svc = PermissionService(db)
+                dept_ids = await svc.department_subtree_ids(current_user.tenant_id, me)
+                user_ids = (
+                    await db.execute(
+                        select(User.id).where(User.department_id.in_(dept_ids))
+                    )
+                ).scalars().all()
+                stmt = stmt.where(SalesOrder.user_id.in_([str(u) for u in user_ids]))
+
+    rows = (await db.execute(stmt.order_by(SalesOrder.id.desc()))).scalars().all()
     return APIResponse(data=[SalesOrderResponse.model_validate(o) for o in rows])
 
 
@@ -127,7 +153,8 @@ async def get_sales_order(
     ))
 
 
-@router.post("/orders/{order_id}/approve", response_model=APIResponse[SalesOrderResponse])
+@router.post("/orders/{order_id}/approve", response_model=APIResponse[SalesOrderResponse],
+             dependencies=[Depends(require_permission("sales.approve"))])
 async def approve_sales_order(
     order_id: int,
     db: AsyncSession = Depends(get_db),
@@ -177,7 +204,8 @@ async def create_shipment(
     )
 
 
-@router.post("/shipments/{shipment_id}/confirm", response_model=APIResponse[ShipmentResult])
+@router.post("/shipments/{shipment_id}/confirm", response_model=APIResponse[ShipmentResult],
+             dependencies=[Depends(require_permission("sales.ship"))])
 async def confirm_shipment(
     shipment_id: int,
     payload: ConfirmShipmentRequest | None = None,
