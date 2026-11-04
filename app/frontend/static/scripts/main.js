@@ -251,7 +251,7 @@ async function loadProducts() {
             container.innerHTML = products.map(p => `
                 <div class="product-card">
                     <h3>${escapeHtml(p.name)}</h3>
-                    <div class="price">¥${p.price.toFixed(2)}</div>
+                    <div class="price">¥${Number(p.price).toFixed(2)}</div>
                     <div class="description">${escapeHtml(p.description || '暂无描述')}</div>
                     <div class="meta">
                         <span>库存: ${p.stock}</span>
@@ -344,7 +344,7 @@ function renderSeckillCard(product, showBuy = false) {
         <div class="product-card">
             <h3>⚡ 秒杀活动 #${product.id}</h3>
             <div style="font-size:13px;color:var(--gray-500);margin-bottom:4px">商品 ID: #${product.product_id}</div>
-            <div class="price">¥${price.toFixed(2)}</div>
+            <div class="price">¥${Number(price).toFixed(2)}</div>
             <div class="seckill-timer ${status.className}">
                 ${status.label} ${status.timeLeft > 0 ? `· ${formatTimeLeft(status.timeLeft)}` : ''}
             </div>
@@ -408,7 +408,7 @@ function showPaymentModal(orderInfo) {
     document.getElementById('modalBody').innerHTML = `
         <div class="payment-info">
             <div class="payment-order-id">订单号: ${displayId}</div>
-            <div class="payment-amount">¥${amount.toFixed(2)}</div>
+            <div class="payment-amount">¥${Number(amount).toFixed(2)}</div>
             <div class="payment-tip">请在 15 分钟内完成支付，逾期将自动取消</div>
         </div>
 
@@ -498,7 +498,7 @@ async function loadOrders() {
                     <div class="order-info">
                         <div class="order-id">订单号: ${o.id.slice(0, 12)}...</div>
                         <div class="order-product">秒杀活动 #${o.seckill_product_id}</div>
-                        <div class="order-amount">¥${(o.total_amount || 0).toFixed(2)}</div>
+                        <div class="order-amount">¥${Number(o.total_amount || 0).toFixed(2)}</div>
                         <div style="font-size:12px;color:var(--gray-400);margin-top:4px">
                             ${new Date(o.created_at).toLocaleString()}
                         </div>
@@ -595,7 +595,7 @@ async function loadAdminProducts() {
                             <tr>
                                 <td>#${p.id}</td>
                                 <td><strong>${escapeHtml(p.name)}</strong></td>
-                                <td>¥${p.price.toFixed(2)}</td>
+                                <td>¥${Number(p.price).toFixed(2)}</td>
                                 <td>${p.stock}</td>
                                 <td><span class="badge ${p.is_on_sale ? 'badge-primary' : 'badge-warning'}">
                                     ${p.is_on_sale ? '在售' : '下架'}</span></td>
@@ -718,7 +718,7 @@ async function loadAdminSeckill() {
                             <tr>
                                 <td>#${p.id}</td>
                                 <td>#${p.product_id}</td>
-                                <td><strong>¥${p.seckill_price.toFixed(2)}</strong></td>
+                                <td><strong>¥${Number(p.seckill_price).toFixed(2)}</strong></td>
                                 <td>${p.stock_count}</td>
                                 <td>${new Date(p.start_time).toLocaleString()}</td>
                                 <td>${new Date(p.end_time).toLocaleString()}</td>
@@ -841,7 +841,7 @@ async function loadAdminOrders() {
                             <tr>
                                 <td style="font-size:12px;font-family:monospace">${o.id.slice(0, 12)}...</td>
                                 <td style="font-size:12px">${o.user_id.slice(0, 8)}...</td>
-                                <td>¥${(o.total_amount || 0).toFixed(2)}</td>
+                                <td>¥${Number(o.total_amount || 0).toFixed(2)}</td>
                                 <td><span class="order-status badge-${o.status}">${getStatusLabel(o.status)}</span></td>
                                 <td style="font-size:12px">${new Date(o.created_at).toLocaleString()}</td>
                                 <td class="actions">
