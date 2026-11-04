@@ -66,6 +66,7 @@ class ProductService:
     async def create_product(self, product_in: ProductCreate) -> Product:
         """创建商品 — 写入DB后清除列表缓存"""
         product = Product(
+            tenant_id=1,
             name=product_in.name,
             description=product_in.description,
             price=product_in.price,
@@ -82,11 +83,22 @@ class ProductService:
         return product
 
     async def update_product(self, product_id: int, product_in: ProductUpdate) -> Optional[Product]:
-        """更新商品 — 更新DB后清除该商品和列表缓存"""
+        """更新商品 — 更新DB后清除该商品和列表缓存
+
+        第 4 步起 `stock` 变成只读汇总字段（由 InventoryService 从
+        warehouse_stocks 重算），这里必须拦住直接改库存的请求，
+        否则汇总值和明细值会分叉。
+        """
+        from app.exceptions import StockIsDerivedException
+
+        data = product_in.dict(exclude_unset=True)
+        if "stock" in data:
+            raise StockIsDerivedException()
+
         product = await self.get_product_by_id(product_id)
         if not product:
             return None
-        for key, value in product_in.dict(exclude_unset=True).items():
+        for key, value in data.items():
             setattr(product, key, value)
         await self.db.commit()
         await self.db.refresh(product)
