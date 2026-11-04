@@ -4,6 +4,7 @@ from sqlalchemy import select
 from app.db.session import get_db
 from app.services.order_service import OrderService
 from app.schemas.order import OrderResponse
+from app.schemas.sales import UnifiedOrder
 from app.schemas.common import APIResponse
 from app.models.user import User
 from app.models.order import Order
@@ -24,6 +25,44 @@ async def get_orders(
     service = OrderService(db)
     orders = await service.get_user_orders(str(current_user.id), skip=skip, limit=limit)
     return APIResponse(data=orders)
+
+
+@router.get("/all", response_model=APIResponse[list[UnifiedOrder]])
+async def unified_orders(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """秒杀订单 + 销售订单合并视图（第三阶段的"兼容"要求）。
+
+    必须声明在 `/{order_id}` **之前**，否则 "all" 会被当成 UUID 匹配走。
+    """
+    from sqlalchemy import select as _select
+
+    from app.models.sales import SalesOrder
+
+    seckill_rows = (
+        await db.execute(_select(Order).where(Order.user_id == current_user.id))
+    ).scalars().all()
+    sales_rows = (
+        await db.execute(
+            _select(SalesOrder).where(
+                SalesOrder.tenant_id == current_user.tenant_id,
+                SalesOrder.user_id == str(current_user.id),
+            )
+        )
+    ).scalars().all()
+
+    merged = [
+        UnifiedOrder(order_type="seckill", order_id=str(o.id), status=o.status.value,
+                     total_amount=o.total_amount, created_at=o.created_at)
+        for o in seckill_rows
+    ] + [
+        UnifiedOrder(order_type="sales", order_id=str(o.id), status=o.status.value,
+                     total_amount=o.total_amount, created_at=o.created_at)
+        for o in sales_rows
+    ]
+    merged.sort(key=lambda x: x.created_at, reverse=True)
+    return APIResponse(data=merged)
 
 
 @router.get("/{order_id}", response_model=APIResponse[OrderResponse])
