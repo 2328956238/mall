@@ -5,20 +5,21 @@ configfile: pytest.ini
 testpaths: tests
 plugins: anyio-3.7.1, langsmith-0.7.32, asyncio-0.24.0
 asyncio: mode=Mode.AUTO, default_loop_scope=function
-collected 104 items
+collected 118 items
 
-tests\test_inventory_schema.py ...............                           [ 14%]
-tests\test_inventory_service.py ....................                     [ 33%]
-tests\test_migrations.py ....                                            [ 37%]
-tests\test_money_decimal.py ...                                          [ 40%]
-tests\test_phase1_backfill.py ..                                         [ 42%]
-tests\test_product_stock_sync.py .......                                 [ 49%]
-tests\test_purchase_flow.py .................                            [ 65%]
-tests\test_regression_auth.py ......                                     [ 71%]
-tests\test_regression_orders.py .....                                    [ 75%]
-tests\test_regression_products.py ........                               [ 83%]
-tests\test_regression_seckill.py ........                                [ 91%]
-tests\test_seckill_concurrency.py ..                                     [ 93%]
+tests\test_inventory_schema.py ...............                           [ 12%]
+tests\test_inventory_service.py ....................                     [ 29%]
+tests\test_migrations.py ....                                            [ 33%]
+tests\test_money_decimal.py ...                                          [ 35%]
+tests\test_phase1_backfill.py ..                                         [ 37%]
+tests\test_product_stock_sync.py .......                                 [ 43%]
+tests\test_purchase_flow.py .................                            [ 57%]
+tests\test_regression_auth.py ......                                     [ 62%]
+tests\test_regression_orders.py .....                                    [ 66%]
+tests\test_regression_products.py ........                               [ 73%]
+tests\test_regression_seckill.py ........                                [ 80%]
+tests\test_sales_flow.py ..............                                  [ 92%]
+tests\test_seckill_concurrency.py ..                                     [ 94%]
 tests\test_seckill_inventory.py .......                                  [100%]
 
-======================= 104 passed in 147.33s (0:02:27) =======================
+======================= 118 passed in 198.08s (0:03:18) =======================

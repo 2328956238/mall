@@ -30,6 +30,17 @@ from .purchase import (  # noqa: F401
     ReceiptStatus,
     Supplier,
 )
+from .sales import (  # noqa: F401
+    Customer,
+    LogisticsTracking,
+    SalesOrder,
+    SalesOrderItem,
+    SalesOrderStatus,
+    Shipment,
+    ShipmentItem,
+    ShipmentStatus,
+    TrackingStatus,
+)
 from .seckill_product import SeckillProduct  # noqa: F401
 from .tenant import Tenant, TenantStatus  # noqa: F401
 from .user import User  # noqa: F401
@@ -60,4 +71,13 @@ __all__ = [
     "PurchaseReceiptItem",
     "POStatus",
     "ReceiptStatus",
+    "Customer",
+    "SalesOrder",
+    "SalesOrderItem",
+    "SalesOrderStatus",
+    "Shipment",
+    "ShipmentItem",
+    "ShipmentStatus",
+    "LogisticsTracking",
+    "TrackingStatus",
 ]

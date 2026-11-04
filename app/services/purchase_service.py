@@ -209,7 +209,7 @@ class PurchaseService:
             await self.db.execute(
                 select(PurchaseOrder).where(
                     PurchaseOrder.id == po_id, PurchaseOrder.tenant_id == tenant_id
-                )
+                ).execution_options(populate_existing=True)
             )
         ).scalar_one_or_none()
         if po is None:

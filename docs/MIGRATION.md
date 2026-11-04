@@ -95,6 +95,7 @@ pg_restore -d "$PG_URL" --clean --if-exists backup_YYYYmmdd_HHMMSS.dump
 | `8ad9bed21515` | 秒杀绑定库存域：`seckill_products.sku_id` / `warehouse_id` | `4e87f06d6490` | 已实测；外键显式命名，downgrade 可回退 |
 | `b7c1de9f4a20` | 同步收尾：老表 `tenant_id` 回填非空、金额 Float→Numeric(18,4)、`orders.seckill_product_id` 可空、库存回填（SKU+默认仓+流水+秒杀绑定） | `8ad9bed21515` | 已实测 upgrade → verify（11 表一致）→ downgrade → upgrade，`tests/test_phase1_backfill.py` 覆盖 |
 | `f8a3a6adda45` | 采购：suppliers / purchase_orders / purchase_order_items / purchase_receipts / purchase_receipt_items | `b7c1de9f4a20` | 已实测 upgrade → verify（16 表一致）→ downgrade → upgrade；两个枚举在 downgrade 显式 drop |
+| `7a5f6eb7dcb7` | 销售：customers / sales_orders / sales_order_items / shipments / shipment_items / logistics_tracking | `f8a3a6adda45` | 已实测 upgrade → verify（22 表一致）→ downgrade → upgrade；三个枚举显式 drop |
 
 > 后续每个阶段的新迁移追加到本表，并注明「是否已在生产执行、执行人、时间」。
 
