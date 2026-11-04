@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
 from app.db.session import engine
 from app.models.base import Base
-from app.api.v1 import auth, users, products, seckill, orders, payment, prompt, chat, agent
+from app.api.v1 import auth, users, products, seckill, orders, payment, prompt, chat, agent, purchase
 from app.admin import products_admin, seckill_admin, orders_admin
 from app.middleware.log_middleware import LogMiddleware
 from app.middleware.prometheus import setup_metrics
@@ -76,6 +76,7 @@ app.include_router(payment.router, prefix="/api/v1", tags=["payment"])
 app.include_router(prompt.router, prefix="/api/v1", tags=["prompt"])
 app.include_router(chat.router, prefix="/api/v1", tags=["chat"])
 app.include_router(agent.router, prefix="/api/v1", tags=["agent"])
+app.include_router(purchase.router, prefix="/api/v1", tags=["purchase"])
 
 # 管理端路由
 app.include_router(products_admin.router, prefix="/admin/api", tags=["admin"])
@@ -89,3 +90,35 @@ app.include_router(websocket_router, prefix="", tags=["websocket"])
 @app.get("/health")
 async def health():
     return {"status": "ok"}
+
+
+# ---------------------------------------------------------------------------
+# 业务异常 → 统一 HTTP 响应
+# 库存/采购服务抛的是自定义异常，这里统一映射，避免 500
+# ---------------------------------------------------------------------------
+from fastapi import Request
+from fastapi.responses import JSONResponse
+
+
+def _error_response(exc):
+    return JSONResponse(
+        status_code=getattr(exc, "http_status", 400),
+        content={
+            "detail": getattr(exc, "message", str(exc)),
+            "code": getattr(exc, "code", "ERROR"),
+        },
+    )
+
+
+from app.services.inventory_service import InventoryError
+from app.services.purchase_service import PurchaseError
+
+
+@app.exception_handler(InventoryError)
+async def _inventory_error_handler(request: Request, exc):
+    return _error_response(exc)
+
+
+@app.exception_handler(PurchaseError)
+async def _purchase_error_handler(request: Request, exc):
+    return _error_response(exc)
