@@ -15,6 +15,13 @@ class Settings(BaseSettings):
     CACHE_TTL_SECONDS: int = 300
 
 
+    # 权限开关：迁移期默认关闭，存量用户没有角色也不会被 403
+    ENFORCE_PERMISSIONS: bool = False
+
+    # 本地开发开关：为 True 时 Redis 走进程内假实现（fakeredis），
+    # 让没装 Redis 的机器也能起服务。生产必须保持 False，否则限流/缓存跨进程全失效。
+    USE_FAKE_REDIS: bool = False
+
     # 秒杀配置
     SECKILL_STOCK_PREFIX: str = "seckill:stock:"
     SECKILL_LIMIT_PREFIX: str = "seckill:limit:"

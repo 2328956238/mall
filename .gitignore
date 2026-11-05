@@ -54,3 +54,9 @@ test-reports/
 tmp/
 temp/
 *.tmp
+
+# 测试用的嵌入式 PostgreSQL（pgserver）
+.pgdata-*/
+.pgtmp/
+.pg_uri.txt
+

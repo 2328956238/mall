@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from pydantic import BaseModel, Field
 from typing import Optional
 from datetime import datetime
@@ -5,7 +7,7 @@ from datetime import datetime
 class ProductBase(BaseModel):
     name: str = Field(..., min_length=1, max_length=255)
     description: Optional[str] = Field(None, max_length=1000)
-    price: float = Field(..., gt=0)
+    price: Decimal = Field(..., gt=0)
     stock: int = Field(0, ge=0)
     is_on_sale: bool = True
 
@@ -15,7 +17,7 @@ class ProductCreate(ProductBase):
 class ProductUpdate(BaseModel):
     name: Optional[str] = Field(None, min_length=1, max_length=255)
     description: Optional[str] = Field(None, max_length=1000)
-    price: Optional[float] = Field(None, gt=0)
+    price: Optional[Decimal] = Field(None, gt=0)
     stock: Optional[int] = Field(None, ge=0)
     is_on_sale: Optional[bool] = None
 

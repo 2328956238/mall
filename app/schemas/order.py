@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from pydantic import BaseModel, Field
 from typing import Optional
 from datetime import datetime
@@ -12,13 +14,13 @@ class OrderStatus(str):
 
 class OrderBase(BaseModel):
     user_id: uuid.UUID
-    seckill_product_id: int
+    seckill_product_id: Optional[int] = None
     quantity: int = Field(1, ge=1)
-    total_amount: float = Field(..., gt=0)
+    total_amount: Decimal = Field(..., gt=0)
 
 class OrderCreate(BaseModel):
     user_id: str
-    seckill_product_id: int
+    seckill_product_id: Optional[int] = None
 
 class OrderUpdate(BaseModel):
     status: Optional[str] = None
@@ -27,9 +29,9 @@ class OrderUpdate(BaseModel):
 class OrderResponse(BaseModel):
     id: uuid.UUID
     user_id: uuid.UUID
-    seckill_product_id: int
+    seckill_product_id: Optional[int] = None
     quantity: int
-    total_amount: float
+    total_amount: Decimal
     status: str
     payment_id: Optional[str] = None
     created_at: datetime

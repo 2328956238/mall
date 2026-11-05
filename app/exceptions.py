@@ -41,3 +41,13 @@ class OutOfStockException(AppException):
     """库存不足"""
     def __init__(self, detail: str = "Out of stock"):
         super().__init__(detail=detail, status_code=status.HTTP_410_GONE)
+
+class StockIsDerivedException(AppException):
+    """products.stock 是只读汇总字段，不允许直接改。
+
+    真正的库存在 warehouse_stocks（库存域）。直接改汇总字段会让
+    汇总值与明细值分叉，对账永远对不平。
+    """
+
+    def __init__(self, detail: str = "库存由库存服务维护，不能直接修改"):
+        super().__init__(detail=detail, status_code=status.HTTP_409_CONFLICT)

@@ -1,10 +1,12 @@
+from decimal import Decimal
+
 from pydantic import BaseModel, Field, field_validator
 from typing import Optional
 from datetime import datetime
 
 class SeckillProductBase(BaseModel):
     product_id: int = Field(..., description="关联的商品ID")
-    seckill_price: float = Field(..., gt=0, description="秒杀价")
+    seckill_price: Decimal = Field(..., gt=0, description="秒杀价")
     stock_count: int = Field(0, ge=0, description="秒杀库存数")
     start_time: datetime = Field(..., description="秒杀开始时间")
     end_time: datetime = Field(..., description="秒杀结束时间")
@@ -23,7 +25,7 @@ class SeckillProductCreate(SeckillProductBase):
     pass
 
 class SeckillProductUpdate(BaseModel):
-    seckill_price: Optional[float] = Field(None, gt=0)
+    seckill_price: Optional[Decimal] = Field(None, gt=0)
     stock_count: Optional[int] = Field(None, ge=0)
     start_time: Optional[datetime] = None
     end_time: Optional[datetime] = None
